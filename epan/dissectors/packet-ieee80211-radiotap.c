@@ -165,6 +165,13 @@ static int hf_radiotap_timestamp_flags_32bit = -1;
 static int hf_radiotap_timestamp_flags_accuracy = -1;
 
 /* HE radiotap flags */
+#define HE_MCS_COL 0
+#define HE_DCM_COL 1
+#define HE_MCS_SHIFT 8
+#define HE_DCM_SHIFT 12
+#define HE_GI_SHIFT 4
+#define MAX_HE_TABLE_ROWS 16
+#define MAX_HE_TABLE_COLS 5
 static int hf_radiotap_he = -1;
 static int hf_radiotap_he_data1 = -1;
 static int hf_radiotap_he_data2 = -1;
@@ -215,6 +222,7 @@ static int hf_radiotap_he_nsts = -1;
 static int hf_radiotap_he_doppler_value = -1;
 static int hf_radiotap_he_txop = -1;
 static int hf_radiotap_he_midamble_periodicity = -1;
+static int hf_radiotap_he_datarate = -1;
 
 /* "Present" flags */
 static int hf_radiotap_present_word = -1;
@@ -358,6 +366,12 @@ struct _radiotap_info {
 
 #define MAX_MCS_VHT_INDEX	9
 #define MAX_VHT_NSS             8
+#define MAX_BW_HE_INDEX    3
+
+/* Maps HE rates to MCS and BW */
+struct bw_he_info {
+	float he_rates_table[MAX_HE_TABLE_ROWS][MAX_HE_TABLE_COLS];
+};
 
 /*
  * Maps a VHT bandwidth index to ieee80211_vhtinfo.rates index.
@@ -543,6 +557,91 @@ static const struct mcs_vht_info ieee80211_vhtinfo[MAX_MCS_VHT_INDEX+1] = {
 						/* 160 Mhz */ {  780.0f,		/* SGI */  866.7f, }
 				}
 		}
+};
+
+
+/* HE rate table - Coloumns: MCS DCM rate(0.8us) rate(1.6us) rate(3.2us) */
+static const struct bw_he_info ieee80211_heinfo[MAX_BW_HE_INDEX + 1] = {
+	{
+		{/*BW 20Mhz*/
+		{ 0,	0,	8.6,	8.1,	7.3, },
+		{ 0,	1,	4.3,	4.0,	3.6, },
+		{ 1,	0,	17.2,	16.3,	14.6, },
+		{ 1,	1,	8.6,	8.1,	7.3, },
+		{ 2,	0,	25.8,	24.4,	21.9, },
+		{ 3,	0,	34.4,	32.5,	29.3, },
+		{ 3,	1,	17.2,	16.3,	14.6, },
+		{ 4,	0,	51.6,	48.8,	43.9, },
+		{ 4,	1,	25.8,	24.4,	21.9, },
+		{ 5,	0,	68.8,	65.0,	58.5, },
+		{ 6,	0,	77.4,	73.1,	65.8, },
+		{ 7,	0,	86.0,	81.3,	73.1, },
+		{ 8,	0,	103.2,	97.5,	87.8, },
+		{ 9,	0,	114.7,	108.3,	97.5, },
+		{ 10,	0,	129.0,	121.9,	109.7, },
+		{ 11,	0,	143.4,	135.4,	121.9, }
+		}
+	},
+	{
+		{/*BW 40Mhz*/
+		{ 0,	0,	17.2,	16.3,	14.6, },
+		{ 0,	1,	8.6,	8.1,	7.3, },
+		{ 1,	0,	34.4,	32.5,	29.3, },
+		{ 1,	1,	17.2,	16.3,	14.6, },
+		{ 2,	0,	51.6,	48.8,	43.9, },
+		{ 3,	0,	68.8,	65.0,	58.5, },
+		{ 3,	1,	34.4,	32.5,	29.3, },
+		{ 4,	0,	103.2,	97.5,	87.8, },
+		{ 4,	1,	51.6,	48.8,	43.9, },
+		{ 5,	0,	137.6,	130.0,	117.0, },
+		{ 6,	0,	154.9,	146.3,	131.6, },
+		{ 7,	0,	172.1,	162.5,	146.3, },
+		{ 8,	0,	206.5,	195.0,	175.5, },
+		{ 9,	0,	229.4,	216.7,	195.0, },
+		{ 10,	0,	258.1,	243.8,	219.4, },
+		{ 11,	0,	286.8,	270.8,	243.8, }
+		}
+	},
+	{
+		{/*BW 80Mhz*/
+		{ 0,	0,	36.0,	34.0,	30.6, },
+		{ 0,	1,	18.0,	17.0,	15.3, },
+		{ 1,	0,	72.1,	68.1,	61.3, },
+		{ 1,	1,	36.0,	34.0,	30.6, },
+		{ 2,	0,	108.1,	102.1,	91.9, },
+		{ 3,	0,	144.1,	136.1,	122.5, },
+		{ 3,	1,	72.1,	68.1,	61.3, },
+		{ 4,	0,	216.2,	204.2,	183.8, },
+		{ 4,	1,	108.1,	102.1,	91.9, },
+		{ 5,	0,	288.2,	272.2,	245.0, },
+		{ 6,	0,	324.3,	306.3,	275.6, },
+		{ 7,	0,	360.3,	340.3,	306.3, },
+		{ 8,	0,	432.4,	408.3,	367.5, },
+		{ 9,	0,	480.4,	453.7,	408.3, },
+		{ 10,	0,	540.4,	510.4,	459.4, },
+		{ 11,	0,	600.4,	567.1,	510.4, }
+		}
+	},
+	{
+		{/*BW 160Mhz*/
+		{ 0,	0,	72.1,	68.1,	61.3, },
+		{ 0,	1,	36.0,	34.0,	30.6, },
+		{ 1,	0,	144.1,	136.1,	122.5, },
+		{ 1,	1,	72.1,	68.1,	61.3, },
+		{ 2,	0,	216.2,	204.2,	183.8, },
+		{ 3,	0,	288.2,	272.2,	245.0, },
+		{ 3,	1,	144.1,	136.1,	122.5, },
+		{ 4,	0,	432.4,	408.3,	367.5, },
+		{ 4,	1,	216.2,	204.2,	183.8, },
+		{ 5,	0,	576.5,	544.4,	490.0, },
+		{ 6,	0,	648.5,	612.5,	551.3, },
+		{ 7,	0,	720.6,	680.6,	612.5, },
+		{ 8,	0,	864.7,	816.7,	735.0, },
+		{ 9,	0,	960.7,	907.4,	816.6, },
+		{ 10,	0,	1080.9,	1020.8,	918.8, },
+		{ 11,	0,	1201.0,	1134.2,	1020.8, }
+		}
+	}
 };
 
 /* In order by value */
@@ -1973,15 +2072,15 @@ dissect_radiotap(tvbuff_t * tvb, packet_info * pinfo, proto_tree * tree, void* u
 		proto_tree *he_tree     = NULL, *he_data1_tree = NULL,
 			*he_data2_tree = NULL, *he_data3_tree = NULL,
 			*he_data4_tree = NULL, *he_data5_tree = NULL, *he_data6_tree = NULL;
-		guint16     data1, data2, data3, data4, data5, data6, nsts;
-		guint       bandwidth    = 0;
-		guint       gi_length    = 0;
-		guint       nss      = 0;
-		guint       mcs      = 0;
-		gboolean    can_calculate_rate;
+		guint16     data1, data2, data3, data4, data5, data6;
+		guint       he_radiotap_bw  = 0;
+		guint       he_radiotap_gi  = 0;
+		guint       he_radiotap_nss = 0;
+		guint       he_radiotap_mcs = 0;
+		guint       he_radiotap_dcm =0;
 		guint       i;
+		float rate_he = 0;
 
-		can_calculate_rate = TRUE;
 		data1 = tvb_get_letohs(tvb, offset);
 		data2 = tvb_get_letohs(tvb, offset+2);
 		data3 = tvb_get_letohs(tvb, offset+4);
@@ -2140,6 +2239,28 @@ dissect_radiotap(tvbuff_t * tvb, packet_info * pinfo, proto_tree * tree, void* u
 			if (data2 & IEEE80211_RADIOTAP_HE_HAVE_MIDAMBLE_PERIODICITY) {
 			proto_tree_add_item(he_data6_tree, hf_radiotap_he_midamble_periodicity,
 					tvb, offset + 10, 2, ENC_LITTLE_ENDIAN);
+			}
+		he_radiotap_mcs = (data3 & IEEE80211_RADIOTAP_HE_MCS) >> HE_MCS_SHIFT;
+		he_radiotap_bw = data5 & IEEE80211_RADIOTAP_HE_BW_RU;
+		he_radiotap_nss = data6 & IEEE80211_RADIOTAP_HE_NSTS;
+		he_radiotap_dcm = (data3 & IEEE80211_RADIOTAP_HE_DCM) >> HE_DCM_SHIFT;
+		he_radiotap_gi = (data5 & IEEE80211_RADIOTAP_HE_GI) >> HE_GI_SHIFT;
+		for ( i=0; i<MAX_HE_TABLE_ROWS ; i++)
+			{
+				if ((ieee80211_heinfo[he_radiotap_bw].he_rates_table[i][HE_MCS_COL]
+					== he_radiotap_mcs) &&
+					(ieee80211_heinfo[he_radiotap_bw].he_rates_table[i][HE_DCM_COL]
+					 == he_radiotap_dcm))
+					{	rate_he = ieee80211_heinfo[he_radiotap_bw].he_rates_table[i]
+						[HE_DCM_COL + he_radiotap_gi + 1];
+						rate_he = rate_he * he_radiotap_nss;
+						rate_ti = proto_tree_add_float_format(he_tree,
+						hf_radiotap_he_datarate,
+						tvb, offset, 12, rate_he,
+						"Data Rate: %.1f Mb/s", rate_he);
+						PROTO_ITEM_SET_GENERATED(rate_ti);
+						break;
+					}
 			}
 		}
 			break;
@@ -3348,6 +3469,11 @@ void proto_register_radiotap(void)
 				FT_UINT16, BASE_DEC, VALS(mid_periodicity),
 				IEEE80211_RADIOTAP_HE_MID_PERIODICITY,
 				"HE mid periodicity", HFILL}},
+
+		{&hf_radiotap_he_datarate,
+			{"Data rate (Mb/s) 0", "radiotap.he.datarate",
+				FT_FLOAT, BASE_NONE, NULL, 0x0,
+				"Speed this frame was sent/received at", HFILL}},
 
 		/* Special variables */
 		{&hf_radiotap_fcs_bad,
