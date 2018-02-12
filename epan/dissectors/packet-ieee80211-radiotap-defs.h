@@ -1,3 +1,7 @@
+/*
+ *   Copyright (c) 2018, The Linux Foundation. All rights reserved.
+ */
+
 /*-
  * Copyright (c) 2003, 2004 David Young.  All rights reserved.
  *

@@ -1,4 +1,7 @@
 /*
+ *   Copyright (c) 2018, The Linux Foundation. All rights reserved.
+ */
+/*
  * Radiotap parser
  *
  * Copyright 2007		Andy Green <andy@warmcat.com>
